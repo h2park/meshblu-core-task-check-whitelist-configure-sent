@@ -7,7 +7,10 @@ class CheckWhitelistConfigureSent
 
   do: (job, callback) =>
     {fromUuid, toUuid, responseId, auth} = job.metadata
-    fromUuid ?= auth.uuid
+    return @sendResponse responseId, 422, callback unless fromUuid?
+    return @sendResponse responseId, 422, callback unless toUuid?
+    return @sendResponse responseId, 403, callback unless toUuid == auth.uuid
+
     emitter = fromUuid
     subscriber = toUuid
     @whitelistManager.checkConfigureSent {emitter, subscriber}, (error, verified) =>

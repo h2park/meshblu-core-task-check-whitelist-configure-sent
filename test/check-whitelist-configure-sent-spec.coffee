@@ -16,12 +16,16 @@ describe 'CheckWhitelistConfigureSent', ->
         job =
           metadata:
             auth:
-              uuid: 'green-blue'
-              token: 'blue-purple'
-            toUuid: 'bright-green'
-            fromUuid: 'dim-green'
+              uuid: 'subscriber'
+            fromUuid: 'emitter'
+            toUuid: 'subscriber'
             responseId: 'yellow-green'
         @sut.do job, (error, @newJob) => done error
+
+      it 'should call the whitelistmanager with the correct arguments', ->
+        expect(@whitelistManager.checkConfigureSent).to.have.been.calledWith
+          emitter: 'emitter'
+          subscriber: 'subscriber'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'yellow-green'
@@ -34,18 +38,41 @@ describe 'CheckWhitelistConfigureSent', ->
 
     describe 'when called with a valid job without a from', ->
       beforeEach (done) ->
-        @whitelistManager.checkConfigureSent.yields null, true
         job =
           metadata:
             auth:
-              uuid: 'green-blue'
-              token: 'blue-purple'
-            toUuid: 'bright-green'
+              uuid: 'subscriber'
+            toUuid: 'subscriber'
             responseId: 'yellow-green'
         @sut.do job, (error, @newJob) => done error
 
-      it 'should call the whitelistmanager with the correct arguments', ->
-        expect(@whitelistManager.checkConfigureSent).to.have.been.calledWith emitter: 'green-blue', subscriber: 'bright-green'
+      it 'should get have the responseId', ->
+        expect(@newJob.metadata.responseId).to.equal 'yellow-green'
+
+      it 'should get have the status code of 422', ->
+        expect(@newJob.metadata.code).to.equal 422
+
+      it 'should get have the status of Unprocessable Entity', ->
+        expect(@newJob.metadata.status).to.equal http.STATUS_CODES[422]
+
+    describe 'when called with a valid job without a to', ->
+      beforeEach (done) ->
+        job =
+          metadata:
+            auth:
+              uuid: 'subscriber'
+            fromUuid: 'emitter'
+            responseId: 'yellow-green'
+        @sut.do job, (error, @newJob) => done error
+
+      it 'should get have the responseId', ->
+        expect(@newJob.metadata.responseId).to.equal 'yellow-green'
+
+      it 'should get have the status code of 422', ->
+        expect(@newJob.metadata.code).to.equal 422
+
+      it 'should get have the status of Unprocessable Entity', ->
+        expect(@newJob.metadata.status).to.equal http.STATUS_CODES[422]
 
     describe 'when called with a different valid job', ->
       beforeEach (done) ->
@@ -53,12 +80,16 @@ describe 'CheckWhitelistConfigureSent', ->
         job =
           metadata:
             auth:
-              uuid: 'dim-green'
-              token: 'blue-lime-green'
-            toUuid: 'hot-yellow'
-            fromUuid: 'ugly-yellow'
+              uuid: 'subscriber2'
+            fromUuid: 'emitter2'
+            toUuid: 'subscriber2'
             responseId: 'purple-green'
         @sut.do job, (error, @newJob) => done error
+
+      it 'should call the whitelistmanager with the correct arguments', ->
+        expect(@whitelistManager.checkConfigureSent).to.have.been.calledWith
+          emitter: 'emitter2'
+          subscriber: 'subscriber2'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'purple-green'
@@ -69,18 +100,43 @@ describe 'CheckWhitelistConfigureSent', ->
       it 'should get have the status of OK', ->
         expect(@newJob.metadata.status).to.equal http.STATUS_CODES[204]
 
+    describe 'when called with a toUuid that does not match auth.uuid', ->
+      beforeEach (done) ->
+        @whitelistManager.checkConfigureSent.yields null, false
+        job =
+          metadata:
+            auth:
+              uuid: 'imposter'
+            fromUuid: 'emitter'
+            toUuid: 'subscriber'
+            responseId: 'purple-green'
+        @sut.do job, (error, @newJob) => done error
+
+      it 'should get have the responseId', ->
+        expect(@newJob.metadata.responseId).to.equal 'purple-green'
+
+      it 'should get have the status code of 403', ->
+        expect(@newJob.metadata.code).to.equal 403
+
+      it 'should get have the status of Forbidden', ->
+        expect(@newJob.metadata.status).to.equal http.STATUS_CODES[403]
+
     describe 'when called with a job that with a device that has an invalid whitelist', ->
       beforeEach (done) ->
         @whitelistManager.checkConfigureSent.yields null, false
         job =
           metadata:
             auth:
-              uuid: 'puke-green'
-              token: 'blue-lime-green'
-            toUuid: 'super-purple'
-            fromUuid: 'not-so-super-purple'
+              uuid: 'subscriber'
+            fromUuid: 'emitter'
+            toUuid: 'subscriber'
             responseId: 'purple-green'
         @sut.do job, (error, @newJob) => done error
+
+      it 'should call the whitelistmanager with the correct arguments', ->
+        expect(@whitelistManager.checkConfigureSent).to.have.been.calledWith
+          emitter: 'emitter'
+          subscriber: 'subscriber'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'purple-green'
@@ -97,12 +153,16 @@ describe 'CheckWhitelistConfigureSent', ->
         job =
           metadata:
             auth:
-              uuid: 'puke-green'
-              token: 'blue-lime-green'
-            toUuid: 'green-bomb'
-            fromUuid: 'green-safe'
+              uuid: 'subscriber'
+            fromUuid: 'emitter'
+            toUuid: 'subscriber'
             responseId: 'purple-green'
         @sut.do job, (error, @newJob) => done error
+
+      it 'should call the whitelistmanager with the correct arguments', ->
+        expect(@whitelistManager.checkConfigureSent).to.have.been.calledWith
+          emitter: 'emitter'
+          subscriber: 'subscriber'
 
       it 'should get have the responseId', ->
         expect(@newJob.metadata.responseId).to.equal 'purple-green'
